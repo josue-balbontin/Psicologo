@@ -137,6 +137,7 @@
         <label>Título</label>
         <input
           class="form-input"
+          [class.form-input-invalid]="isCreateFieldInvalid('title')"
           type="text"
           placeholder="Agregar título"
           [(ngModel)]="newEvent.title"
@@ -147,6 +148,7 @@
         <label>Descripción</label>
         <textarea
           class="form-input"
+          [class.form-input-invalid]="isCreateFieldInvalid('descripcion')"
           rows="3"
           placeholder="Descripción de la reserva"
           [(ngModel)]="newEvent.descripcion">
@@ -156,12 +158,17 @@
       <div class="form-row">
         <div class="form-group">
           <label>Teléfono</label>
-          <input class="form-input" type="text" [(ngModel)]="newEvent.telefono" placeholder="Ej: +57 300 123 4567" />
+          <input class="form-input" [class.form-input-invalid]="isCreateFieldInvalid('telefono')" type="text" [(ngModel)]="newEvent.telefono" placeholder="Ej: +57 300 123 4567" />
         </div>
         <div class="form-group">
           <label>País</label>
           <input class="form-input" type="text" [(ngModel)]="newEvent.pais" placeholder="Ej: Colombia" />
         </div>
+      </div>
+
+      <div class="form-group">
+        <label>Precio</label>
+        <input class="form-input" type="number" min="0" step="0.01" [(ngModel)]="newEvent.precio" placeholder="Ej: 120.00" />
       </div>
 
       <div class="form-group">
@@ -277,6 +284,18 @@
         <div>
           <p class="detail-label">Descripción</p>
           <p class="detail-value">{{ selectedEvent.data.tags.reserva.descripcion }}</p>
+        </div>
+      </div>
+
+      <div class="detail-row" *ngIf="selectedEvent.data.tags.reserva.precio !== null && selectedEvent.data.tags.reserva.precio !== undefined">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M15 9a3 3 0 0 0-6 0c0 3 6 1 6 4a3 3 0 0 1-6 0"/>
+          <line x1="12" y1="6" x2="12" y2="18"/>
+        </svg>
+        <div>
+          <p class="detail-label">Precio</p>
+          <p class="detail-value">{{ selectedEvent.data.tags.reserva.precio | number:'1.2-2' }}</p>
         </div>
       </div>
     </div>

@@ -51,6 +51,7 @@ export class CalendarComponent implements OnInit {
   modalError = signal<string | null>(null);
   showEditarReserva = signal(false);
   reservaParaEditar = signal<Reserva | null>(null);
+  createSubmitAttempted = signal(false);
 
   readonly COLOR = '#3b82f6';
 
@@ -60,6 +61,7 @@ export class CalendarComponent implements OnInit {
     telefono: '',
     correo: '',
     pais: '',
+    precio: '',
     start: '',
     end: '',
   };
@@ -246,6 +248,22 @@ export class CalendarComponent implements OnInit {
     });
   }
 
+  private formatTimeForDb(datetimeLocal: string): string {
+    const time = datetimeLocal.split('T')[1] || '';
+    if (time.length === 5) {
+      return `${time}:00`;
+    }
+    return time.substring(0, 8);
+  }
+
+  isCreateFieldInvalid(field: 'title' | 'descripcion' | 'telefono'): boolean {
+    if (!this.createSubmitAttempted()) return false;
+
+    if (field === 'title') return !this.newEvent.title.trim();
+    if (field === 'descripcion') return !this.newEvent.descripcion.trim();
+    return !this.newEvent.telefono.trim();
+  }
+
   openNewEventModal(start: string = '', end: string = ''): void {
     const fmt = (s: string) => (s ? s.substring(0, 16) : '');
     if (!start) {
@@ -262,16 +280,23 @@ export class CalendarComponent implements OnInit {
       telefono: '',
       correo: '',
       pais: '',
+      precio: '',
       start: fmt(start),
       end: fmt(end),
     };
+    this.createSubmitAttempted.set(false);
     this.modalError.set(null);
     this.showEventModal.set(true);
   }
 
   async saveEvent(): Promise<void> {
-    if (!this.newEvent.title.trim()) return;
+    this.createSubmitAttempted.set(true);
     this.modalError.set(null);
+
+    if (!this.newEvent.title.trim() || !this.newEvent.descripcion.trim() || !this.newEvent.telefono.trim()) {
+      this.modalError.set('Título, descripción y teléfono son obligatorios.');
+      return;
+    }
 
     if (this.newEvent.end <= this.newEvent.start) {
       this.modalError.set('La hora de fin debe ser posterior a la hora de inicio.');
@@ -285,6 +310,19 @@ export class CalendarComponent implements OnInit {
 
     const startDate = new Date(this.newEvent.start);
     const endDate = new Date(this.newEvent.end);
+    const dia = startDate.toISOString().substring(0, 10);
+    const horaInicio = this.formatTimeForDb(this.newEvent.start);
+    const horaFinal = this.formatTimeForDb(this.newEvent.end);
+
+    const haySuperposicion = await this.supabaseService.existeSuperposicion(
+      dia,
+      horaInicio,
+      horaFinal
+    );
+    if (haySuperposicion) {
+      this.modalError.set('El horario se superpone con una reserva existente.');
+      return;
+    }
 
     const reserva: Omit<Reserva, 'id'> = {
       nombre: this.newEvent.title.trim(),
@@ -292,9 +330,10 @@ export class CalendarComponent implements OnInit {
       telefono: this.newEvent.telefono.trim(),
       correo: this.newEvent.correo.trim(),
       pais: this.newEvent.pais.trim(),
-      dia: startDate.toISOString().substring(0, 10),
-      hora_inicio: startDate.toTimeString().substring(0, 5),
-      hora_final: endDate.toTimeString().substring(0, 5),
+      precio: this.newEvent.precio.trim() ? Number(this.newEvent.precio) : null,
+      dia,
+      hora_inicio: horaInicio,
+      hora_final: horaFinal,
     };
 
     this.isLoading.set(true);
@@ -303,6 +342,7 @@ export class CalendarComponent implements OnInit {
       await this.supabaseService.guardar(reserva);
       await this.cargarReservas();
       this.showEventModal.set(false);
+      this.createSubmitAttempted.set(false);
     } catch (err) {
       console.error('Error al guardar reserva:', err);
       this.errorMsg.set('No se pudo guardar la reserva.');
@@ -418,10 +458,11 @@ export class CalendarComponent implements OnInit {
 
   private reservaToEvent(r: Reserva): DayPilot.EventData {
     const descripcion = r.descripcion || '';
+    const precio = r.precio ?? null;
     return {
       id: String(r.id),
       text: r.nombre,
-      html: this.buildEventPreviewHtml(r.nombre, descripcion),
+      html: this.buildEventPreviewHtml(r.nombre, descripcion, precio),
       start: `${r.dia}T${r.hora_inicio}`,
       end: `${r.dia}T${r.hora_final}`,
       backColor: this.COLOR,
@@ -431,13 +472,15 @@ export class CalendarComponent implements OnInit {
     } as DayPilot.EventData;
   }
 
-  private buildEventPreviewHtml(titulo: string, descripcion: string): string {
+  private buildEventPreviewHtml(titulo: string, descripcion: string, precio: number | null): string {
     const safeTitle = this.escapeHtml(titulo || 'Sin título');
     const safeDescription = this.escapeHtml(descripcion || '');
+    const safePrice = precio === null ? '' : this.escapeHtml(`$${precio.toFixed(2)}`);
 
     return `
       <div class="preview-event-title">${safeTitle}</div>
       <div class="preview-event-description">${safeDescription}</div>
+      <div class="preview-event-price">${safePrice}</div>
     `;
   }
 

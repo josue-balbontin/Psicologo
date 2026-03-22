@@ -57,4 +57,26 @@ export class SupabaseService {
 
     if (error) throw error;
   }
+
+  async existeSuperposicion(
+    dia: string,
+    horaInicio: string,
+    horaFinal: string,
+    excludeId?: number
+  ): Promise<boolean> {
+    let query = this.supabase
+      .from('reservas')
+      .select('id')
+      .eq('dia', dia)
+      .lt('hora_inicio', horaFinal)
+      .gt('hora_final', horaInicio);
+
+    if (excludeId !== undefined) {
+      query = query.neq('id', excludeId);
+    }
+
+    const { data, error } = await query.limit(1);
+    if (error) throw error;
+    return (data ?? []).length > 0;
+  }
 }

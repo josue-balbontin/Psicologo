@@ -19,23 +19,28 @@
     <div class="er-body">
       <div class="er-group">
         <label class="er-label">Nombre</label>
-        <input class="er-input" type="text" [(ngModel)]="form.nombre" placeholder="Nombre del paciente" />
+        <input class="er-input" [class.er-input-invalid]="isInvalidField('nombre')" type="text" [(ngModel)]="form.nombre" placeholder="Nombre del paciente" />
       </div>
 
       <div class="er-group">
         <label class="er-label">Descripción</label>
-        <textarea class="er-input" rows="3" [(ngModel)]="form.descripcion" placeholder="Descripción de la reserva"></textarea>
+        <textarea class="er-input" [class.er-input-invalid]="isInvalidField('descripcion')" rows="3" [(ngModel)]="form.descripcion" placeholder="Descripción de la reserva"></textarea>
       </div>
 
       <div class="er-row">
         <div class="er-group">
           <label class="er-label">Teléfono</label>
-          <input class="er-input" type="text" [(ngModel)]="form.telefono" placeholder="Ej: +591 300 123 4567" />
+          <input class="er-input" [class.er-input-invalid]="isInvalidField('telefono')" type="text" [(ngModel)]="form.telefono" placeholder="Ej: +591 300 123 4567" />
         </div>
         <div class="er-group">
           <label class="er-label">País</label>
           <input class="er-input" type="text" [(ngModel)]="form.pais" placeholder="Ej: Bolivia" />
         </div>
+      </div>
+
+      <div class="er-group">
+        <label class="er-label">Precio</label>
+        <input class="er-input" type="number" min="0" step="0.01" [(ngModel)]="form.precio" placeholder="Ej: 120.00" />
       </div>
 
       <div class="er-group">
