@@ -1,0 +1,69 @@
+<div class="er-overlay">
+  <div class="er-modal" (click)="$event.stopPropagation()">
+
+    <div class="er-header">
+      <div class="er-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+      </div>
+      <h3 class="er-title">Editar reserva</h3>
+      <button class="er-close" (click)="cancelar()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="er-body">
+      <div class="er-group">
+        <label class="er-label">Nombre</label>
+        <input class="er-input" type="text" [(ngModel)]="form.nombre" placeholder="Nombre del paciente" />
+      </div>
+
+      <div class="er-group">
+        <label class="er-label">Descripción</label>
+        <textarea class="er-input" rows="3" [(ngModel)]="form.descripcion" placeholder="Descripción de la reserva"></textarea>
+      </div>
+
+      <div class="er-row">
+        <div class="er-group">
+          <label class="er-label">Teléfono</label>
+          <input class="er-input" type="text" [(ngModel)]="form.telefono" placeholder="Ej: +591 300 123 4567" />
+        </div>
+        <div class="er-group">
+          <label class="er-label">País</label>
+          <input class="er-input" type="text" [(ngModel)]="form.pais" placeholder="Ej: Bolivia" />
+        </div>
+      </div>
+
+      <div class="er-group">
+        <label class="er-label">Correo</label>
+        <input class="er-input" type="email" [(ngModel)]="form.correo" placeholder="correo@ejemplo.com" />
+      </div>
+
+      <div class="er-row">
+        <div class="er-group">
+          <label class="er-label">Inicio</label>
+          <input class="er-input" type="datetime-local" [(ngModel)]="form.start" />
+        </div>
+        <div class="er-group">
+          <label class="er-label">Fin</label>
+          <input class="er-input" type="datetime-local" [(ngModel)]="form.end" />
+        </div>
+      </div>
+
+      <!-- Agrega aquí nuevos campos según necesites -->
+    </div>
+
+    <div class="er-footer">
+      <p class="er-error" *ngIf="errorMsg()">{{ errorMsg() }}</p>
+      <button class="er-btn-secondary" (click)="cancelar()" [disabled]="isLoading()">Cancelar</button>
+      <button class="er-btn-primary" (click)="guardar()" [disabled]="isLoading()">
+        {{ isLoading() ? 'Guardando...' : 'Guardar cambios' }}
+      </button>
+    </div>
+
+  </div>
+</div>

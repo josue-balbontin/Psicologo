@@ -1,0 +1,310 @@
+<div class="teams-calendar-wrapper">
+
+  <button
+    class="reopen-sidebar-btn"
+    *ngIf="!sidebarOpen()"
+    (click)="sidebarOpen.set(true)"
+    title="Abrir calendario lateral"
+    aria-label="Abrir calendario lateral">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+    Calendario
+  </button>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" [class.collapsed]="!sidebarOpen()">
+    <div class="sidebar-header">
+      <span class="sidebar-title">Calendario</span>
+    </div>
+
+    <button class="new-event-btn" (click)="openNewEventModal()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Nuevo evento
+    </button>
+
+    <!-- Mini Navigator -->
+    <div class="mini-nav-wrapper">
+      <daypilot-navigator
+        #navigator
+        [config]="navigatorConfig"
+        [date]="selectedDate()">
+      </daypilot-navigator>
+    </div>
+
+    <button
+      class="close-sidebar-btn"
+      (click)="sidebarOpen.set(false)"
+      title="Cerrar calendario lateral"
+      aria-label="Cerrar calendario lateral">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+      Cerrar
+    </button>
+
+
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-area">
+
+    <!-- TOOLBAR -->
+    <header class="toolbar">
+      <div class="toolbar-left">
+        <button class="today-btn" (click)="goToday()">Hoy</button>
+        <div class="nav-arrows">
+          <button class="arrow-btn" (click)="navigate(-1)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
+          <button class="arrow-btn" (click)="navigate(1)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </div>
+        <h2 class="date-range-title">{{ headerTitle }}</h2>
+      </div>
+
+      <div class="toolbar-right">
+        <div class="view-switcher">
+          <button
+            *ngFor="let v of ['Day', 'Week', 'Month']"
+            class="view-btn"
+            [class.active]="currentView() === v"
+            (click)="switchView($any(v))">
+            {{ v === 'Day' ? 'Día' : v === 'Week' ? 'Semana' : 'Mes' }}
+          </button>
+        </div>
+        <button class="new-event-icon-btn" (click)="openNewEventModal()" title="Nuevo evento">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- CALENDAR VIEWS -->
+    <div class="calendar-container">
+      <daypilot-calendar
+        #dayPilotCalendar
+        *ngIf="currentView() !== 'Month'"
+        [config]="calendarConfig">
+      </daypilot-calendar>
+
+      <daypilot-month
+        #dayPilotMonth
+        *ngIf="currentView() === 'Month'"
+        [config]="monthConfig">
+      </daypilot-month>
+    </div>
+  </main>
+</div>
+
+<!-- LOADING & ERROR OVERLAYS -->
+<app-loading *ngIf="isLoading()"></app-loading>
+<app-error
+  *ngIf="errorMsg()"
+  [mensaje]="errorMsg()!"
+  (retry)="cargarReservas()">
+</app-error>
+
+<!-- NEW EVENT MODAL -->
+<div class="modal-overlay" *ngIf="showEventModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </div>
+      <h3 class="modal-title">Nuevo evento</h3>
+      <button class="modal-close" (click)="showEventModal.set(false)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Título</label>
+        <input
+          class="form-input"
+          type="text"
+          placeholder="Agregar título"
+          [(ngModel)]="newEvent.title"
+          (keyup.enter)="saveEvent()" />
+      </div>
+
+      <div class="form-group">
+        <label>Descripción</label>
+        <textarea
+          class="form-input"
+          rows="3"
+          placeholder="Descripción de la reserva"
+          [(ngModel)]="newEvent.descripcion">
+        </textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Teléfono</label>
+          <input class="form-input" type="text" [(ngModel)]="newEvent.telefono" placeholder="Ej: +57 300 123 4567" />
+        </div>
+        <div class="form-group">
+          <label>País</label>
+          <input class="form-input" type="text" [(ngModel)]="newEvent.pais" placeholder="Ej: Colombia" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Correo</label>
+        <input class="form-input" type="email" [(ngModel)]="newEvent.correo" placeholder="correo@ejemplo.com" />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Inicio</label>
+          <input class="form-input" type="datetime-local" [(ngModel)]="newEvent.start" />
+        </div>
+        <div class="form-group">
+          <label>Fin</label>
+          <input class="form-input" type="datetime-local" [(ngModel)]="newEvent.end" />
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <p class="modal-error" *ngIf="modalError()">{{ modalError() }}</p>
+      <button class="btn-secondary" (click)="showEventModal.set(false)">Cancelar</button>
+      <button class="btn-primary" (click)="saveEvent()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- EVENT DETAIL MODAL -->
+<div class="modal-overlay" *ngIf="showEventDetail()">
+  <div class="modal detail-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header" [style.background]="selectedEvent?.data?.color || '#3b82f6'">
+      <div class="modal-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </div>
+      <h3 class="modal-title">{{ selectedEvent?.data?.text }}</h3>
+      <button class="modal-close" (click)="showEventDetail.set(false)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body" *ngIf="selectedEvent">
+      <div class="detail-row">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <div>
+          <p class="detail-label">Inicio</p>
+          <p class="detail-value">{{ formatDpDate(selectedEvent.start().toString()) }}</p>
+        </div>
+      </div>
+      <div class="detail-row">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <div>
+          <p class="detail-label">Fin</p>
+          <p class="detail-value">{{ formatDpDate(selectedEvent.end().toString()) }}</p>
+        </div>
+      </div>
+
+      <div class="detail-row">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2">
+          <path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/>
+        </svg>
+        <div>
+          <p class="detail-label">Duración de la sesión</p>
+          <p class="detail-value">{{ formatDuration(selectedEvent.start().toString(), selectedEvent.end().toString()) }}</p>
+        </div>
+      </div>
+
+      <div class="detail-row" *ngIf="selectedEvent.data.tags.reserva.telefono">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.86 19.86 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+        </svg>
+        <div>
+          <p class="detail-label">Teléfono</p>
+          <p class="detail-value">{{ selectedEvent.data.tags.reserva.telefono }}</p>
+        </div>
+      </div>
+
+      <div class="detail-row" *ngIf="selectedEvent.data.tags.reserva.correo">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2">
+          <path d="M4 4h16v16H4z"/><polyline points="22,6 12,13 2,6"/>
+        </svg>
+        <div>
+          <p class="detail-label">Correo</p>
+          <p class="detail-value">{{ selectedEvent.data.tags.reserva.correo }}</p>
+        </div>
+      </div>
+
+      <div class="detail-row" *ngIf="selectedEvent.data.tags.reserva.pais">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+        <div>
+          <p class="detail-label">País</p>
+          <p class="detail-value">{{ selectedEvent.data.tags.reserva.pais }}</p>
+        </div>
+      </div>
+
+      <div class="detail-row" *ngIf="selectedEvent.data.tags.reserva.descripcion">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/>
+        </svg>
+        <div>
+          <p class="detail-label">Descripción</p>
+          <p class="detail-value">{{ selectedEvent.data.tags.reserva.descripcion }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-danger" (click)="deleteSelectedEvent()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+          <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+        </svg>
+        Eliminar
+      </button>
+      <button class="btn-edit" (click)="openEditarReserva()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+        Editar
+      </button>
+      <button class="btn-secondary" (click)="showEventDetail.set(false)">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDITAR RESERVA -->
+<app-editar-reserva
+  *ngIf="showEditarReserva() && reservaParaEditar()"
+  [reserva]="reservaParaEditar()!"
+  (guardado)="onReservaGuardada($event)"
+  (cancelado)="onEditarCancelado()">
+</app-editar-reserva>
