@@ -1,6 +1,6 @@
 # Piscologo
 
-    https://github.com/josue-balbontin/Piscologo
+    https://github.com/josue-balbontin/Psicologo
 
 ## Estructura
 
