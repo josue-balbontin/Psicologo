@@ -32,13 +32,15 @@
     "@daypilot/daypilot-lite-angular": "^5.4.0",
     "@supabase/supabase-js": "^2.98.0",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "zone.js": "^0.16.2"
   },
   "devDependencies": {
     "@analogjs/vite-plugin-angular": "^2.5.1",
     "@angular/build": "^21.0.5",
     "@angular/cli": "^21.0.5",
     "@angular/compiler-cli": "^21.0.0",
+    "@vitest/coverage-v8": "^4.1.7",
     "jsdom": "^27.4.0",
     "typescript": "~5.9.2",
     "vite": "^8.0.13",
