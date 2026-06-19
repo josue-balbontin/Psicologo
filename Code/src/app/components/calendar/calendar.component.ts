@@ -167,7 +167,7 @@ export class CalendarComponent implements OnInit {
         year: 'numeric',
       });
     }
-    // Week: show range
+
     const startOfWeek = new Date(d);
     startOfWeek.setDate(d.getDate() - d.getDay());
     const endOfWeek = new Date(startOfWeek);
@@ -200,7 +200,7 @@ export class CalendarComponent implements OnInit {
         events: this.events,
       };
     }
-    // Wait one tick so *ngIf creates the component and ViewChild is ready
+    
     setTimeout(() => {
       if (view !== 'Month' && this.calendar?.control) {
         this.calendar.control.update({ viewType: view, startDate: this.selectedDate(), events: this.events });
@@ -432,16 +432,16 @@ export class CalendarComponent implements OnInit {
     const start = new Date(e.start().toString());
     const end = new Date(e.end().toString());
 
-    // Check overlap before applying (exclude the event being moved)
+  
     const newStart = e.start().toString();
     const newEnd = e.end().toString();
     if (this.hasOverlap(newStart, newEnd, String(id))) {
       this.errorMsg.set('No se puede mover: el horario se superpone con una reserva existente.');
-      await this.cargarReservas(); // revert to original positions
+      await this.cargarReservas(); 
       return;
     }
 
-    // Update local array immediately so the event stays visible
+
     const idx = this.events.findIndex((ev) => ev.id === String(id));
     if (idx >= 0) {
       this.events[idx] = {
@@ -462,7 +462,7 @@ export class CalendarComponent implements OnInit {
     } catch (err) {
       console.error('Error al actualizar reserva:', err);
       this.errorMsg.set('No se pudo mover la reserva.');
-      // Revert by reloading from server
+
       await this.cargarReservas();
     }
   }
@@ -524,9 +524,9 @@ export class CalendarComponent implements OnInit {
       .replace(/'/g, '&#39;');
   }
 
-  /** Convierte '2026-03-06T09:00:00' → '06/03/2026 09:00' */
+
   formatDpDate(dpStr: string): string {
-    // DayPilot devuelve 'YYYY-MM-DDTHH:mm:ss'
+  
     const [datePart, timePart] = dpStr.split('T');
     if (!datePart) return dpStr;
     const [y, m, d] = datePart.split('-');
