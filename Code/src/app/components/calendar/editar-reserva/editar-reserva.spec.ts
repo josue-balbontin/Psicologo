@@ -62,6 +62,17 @@ describe('EditarReserva (Pruebas Unitarias)', () => {
     expect(mockSupabaseService.actualizar).not.toHaveBeenCalled();
   });
 
+  it('HU-07: Bloquea la actualización si el correo tiene un formato inválido (ej. sin @)', async () => {
+   
+    component.form.correo = 'correosinarroba.com';
+    
+    await component.guardar();
+
+   
+    expect(component.errorMsg()).toBe('Formato de correo inválido');
+    expect(mockSupabaseService.actualizar).not.toHaveBeenCalled();
+  });
+
   it('HU-05: El sistema rechaza la edición si el nuevo horario está ocupado ', async () => {
     mockSupabaseService.existeSuperposicion.mockResolvedValue(true);
 
