@@ -19,6 +19,8 @@ import { Reserva } from '../../models/reserva.model';
 import { LoadingComponent } from '../loading/loading.component';
 import { ErrorComponent } from '../error/error.component';
 import { EditarReserva } from './editar-reserva/editar-reserva';
+import { NuevoEventoModal } from './nuevo-evento-modal/nuevo-evento-modal';
+import { DetalleEventoModal } from './detalle-evento-modal/detalle-evento-modal';
 
 type CalendarView = 'Day' | 'Week' | 'Month';
 
@@ -32,6 +34,8 @@ type CalendarView = 'Day' | 'Week' | 'Month';
     LoadingComponent,
     ErrorComponent,
     EditarReserva,
+    NuevoEventoModal,
+    DetalleEventoModal,
   ],
   templateUrl: './calendar.component.html',
   styleUrl: './calendar.component.css',
@@ -52,20 +56,12 @@ export class CalendarComponent implements OnInit {
   modalError = signal<string | null>(null);
   showEditarReserva = signal(false);
   reservaParaEditar = signal<Reserva | null>(null);
-  createSubmitAttempted = signal(false);
 
   readonly COLOR = '#3b82f6';
 
-  newEvent = {
-    title: '',
-    descripcion: '',
-    telefono: '',
-    correo: '',
-    pais: '',
-    precio: '' as string | number | null,
-    start: '',
-    end: '',
-  };
+  newEventStart = signal('');
+  newEventEnd = signal('');
+
   selectedEvent: DayPilot.Event | null = null;
 
   navigatorConfig: DayPilot.NavigatorConfig = {
@@ -271,14 +267,6 @@ export class CalendarComponent implements OnInit {
     return Number.isFinite(parsed) ? parsed : NaN;
   }
 
-  isCreateFieldInvalid(field: 'title' | 'descripcion' | 'telefono'): boolean {
-    if (!this.createSubmitAttempted()) return false;
-
-    if (field === 'title') return !this.newEvent.title.trim();
-    if (field === 'descripcion') return !this.newEvent.descripcion.trim();
-    return !this.newEvent.telefono.trim();
-  }
-
   openNewEventModal(start: string = '', end: string = ''): void {
     const fmt = (s: string) => (s ? s.substring(0, 16) : '');
     if (!start) {
@@ -289,59 +277,32 @@ export class CalendarComponent implements OnInit {
       start = `${d}T${h}:00`;
       end = `${d}T${(now.getHours() + 1).toString().padStart(2, '0')}:00`;
     }
-    this.newEvent = {
-      title: '',
-      descripcion: '',
-      telefono: '',
-      correo: '',
-      pais: '',
-      precio: '',
-      start: fmt(start),
-      end: fmt(end),
-    };
-    this.createSubmitAttempted.set(false);
+    this.newEventStart.set(fmt(start));
+    this.newEventEnd.set(fmt(end));
     this.modalError.set(null);
     this.showEventModal.set(true);
   }
 
-  async saveEvent(): Promise<void> {
+  async onSaveNewEvent(eventData: any): Promise<void> {
     if (this.isSavingEvent()) return;
-
-    this.createSubmitAttempted.set(true);
     this.modalError.set(null);
 
-    if (!this.newEvent.title.trim() || !this.newEvent.descripcion.trim() || !this.newEvent.telefono.trim()) {
-      this.modalError.set('Título, descripción y teléfono son obligatorios.');
-      return;
-    }
-
-    const phoneDigits = this.newEvent.telefono.replace(/\D/g, '');
-    if (phoneDigits.length < 7) {
-      this.modalError.set('El teléfono debe tener al menos 7 dígitos.');
-      return;
-    }
-
-    const precio = this.parsePrecio(this.newEvent.precio);
+    const precio = this.parsePrecio(eventData.precio);
     if (Number.isNaN(precio)) {
       this.modalError.set('El precio debe ser un número válido.');
       return;
     }
 
-    if (this.newEvent.end <= this.newEvent.start) {
-      this.modalError.set('La hora de fin debe ser posterior a la hora de inicio.');
-      return;
-    }
-
-    if (this.hasOverlap(this.newEvent.start, this.newEvent.end)) {
+    if (this.hasOverlap(eventData.start, eventData.end)) {
       this.modalError.set('El horario se superpone con una reserva existente.');
       return;
     }
 
-    const startDate = new Date(this.newEvent.start);
-    const endDate = new Date(this.newEvent.end);
+    const startDate = new Date(eventData.start);
+    const endDate = new Date(eventData.end);
     const dia = startDate.toISOString().substring(0, 10);
-    const horaInicio = this.formatTimeForDb(this.newEvent.start);
-    const horaFinal = this.formatTimeForDb(this.newEvent.end);
+    const horaInicio = this.formatTimeForDb(eventData.start);
+    const horaFinal = this.formatTimeForDb(eventData.end);
 
     this.isSavingEvent.set(true);
     this.isLoading.set(true);
@@ -358,11 +319,11 @@ export class CalendarComponent implements OnInit {
       }
 
       const reserva: Omit<Reserva, 'id'> = {
-        nombre: this.newEvent.title.trim(),
-        descripcion: this.newEvent.descripcion.trim(),
-        telefono: this.newEvent.telefono.trim(),
-        correo: this.newEvent.correo.trim(),
-        pais: this.newEvent.pais.trim(),
+        nombre: eventData.title.trim(),
+        descripcion: eventData.descripcion.trim(),
+        telefono: eventData.telefono.trim(),
+        correo: eventData.correo.trim(),
+        pais: eventData.pais.trim(),
         precio,
         dia,
         hora_inicio: horaInicio,
@@ -372,7 +333,6 @@ export class CalendarComponent implements OnInit {
       await this.supabaseService.guardar(reserva);
       await this.cargarReservas();
       this.showEventModal.set(false);
-      this.createSubmitAttempted.set(false);
     } catch (err) {
       console.error('Error al guardar reserva:', err);
       this.errorMsg.set('No se pudo guardar la reserva.');
@@ -382,7 +342,7 @@ export class CalendarComponent implements OnInit {
     }
   }
 
-  async deleteSelectedEvent(): Promise<void> {
+  async onDeleteEvent(): Promise<void> {
     if (!this.selectedEvent) return;
     const id = Number(this.selectedEvent.id());
 
@@ -522,34 +482,6 @@ export class CalendarComponent implements OnInit {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
-  }
-
-
-  formatDpDate(dpStr: string): string {
-  
-    const [datePart, timePart] = dpStr.split('T');
-    if (!datePart) return dpStr;
-    const [y, m, d] = datePart.split('-');
-    const time = timePart ? timePart.substring(0, 5) : '';
-    return `${d}/${m}/${y} ${time}`;
-  }
-
-  formatDuration(startStr: string, endStr: string): string {
-    const start = new Date(startStr);
-    const end = new Date(endStr);
-    const diffMs = end.getTime() - start.getTime();
-
-    if (Number.isNaN(diffMs) || diffMs <= 0) {
-      return 'No disponible';
-    }
-
-    const totalMinutes = Math.floor(diffMs / 60000);
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-
-    if (hours === 0) return `${minutes} min`;
-    if (minutes === 0) return `${hours} h`;
-    return `${hours} h ${minutes} min`;
   }
 
   private darkenColor(hex: string, amount: number): string {

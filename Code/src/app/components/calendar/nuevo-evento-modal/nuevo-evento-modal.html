@@ -1,0 +1,83 @@
+<div class="modal-overlay" *ngIf="showModal">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </div>
+      <h3 class="modal-title">Nuevo evento</h3>
+      <button class="modal-close" [disabled]="isSaving" (click)="onClose()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Título</label>
+        <input
+          class="form-input"
+          [class.form-input-invalid]="isCreateFieldInvalid('title')"
+          type="text"
+          placeholder="Agregar título"
+          [(ngModel)]="newEvent.title"
+          (keyup.enter)="onSave()" />
+      </div>
+
+      <div class="form-group">
+        <label>Descripción</label>
+        <textarea
+          class="form-input"
+          [class.form-input-invalid]="isCreateFieldInvalid('descripcion')"
+          rows="3"
+          placeholder="Descripción de la reserva"
+          [(ngModel)]="newEvent.descripcion">
+        </textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Teléfono</label>
+          <input class="form-input" [class.form-input-invalid]="isCreateFieldInvalid('telefono')" type="text" [(ngModel)]="newEvent.telefono" placeholder="Ej: +57 300 123 4567" />
+        </div>
+        <div class="form-group">
+          <label>País</label>
+          <input class="form-input" type="text" [(ngModel)]="newEvent.pais" placeholder="Ej: Colombia" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Precio</label>
+        <input class="form-input" type="number" min="0" step="0.01" [(ngModel)]="newEvent.precio" placeholder="Ej: 120.00" />
+      </div>
+
+      <div class="form-group">
+        <label>Correo</label>
+        <input class="form-input" type="email" [(ngModel)]="newEvent.correo" placeholder="correo@ejemplo.com" />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Inicio</label>
+          <input class="form-input" type="datetime-local" [(ngModel)]="newEvent.start" />
+        </div>
+        <div class="form-group">
+          <label>Fin</label>
+          <input class="form-input" type="datetime-local" [(ngModel)]="newEvent.end" />
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <p class="modal-error" *ngIf="errorMsg || localError()">{{ errorMsg || localError() }}</p>
+      <button class="btn-secondary" [disabled]="isSaving" (click)="onClose()">Cancelar</button>
+      <button class="btn-primary" [disabled]="isSaving" (click)="onSave()">
+        {{ isSaving ? 'Guardando...' : 'Guardar' }}
+      </button>
+    </div>
+  </div>
+</div>
