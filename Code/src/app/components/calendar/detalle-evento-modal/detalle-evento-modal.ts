@@ -22,15 +22,28 @@ export class DetalleEventoModal {
     this.close.emit();
   }
 
+  private validarCancelacion(): string | null {
+    if (!this.selectedEvent || !this.selectedEvent.start) {
+      return null;
+    }
+
+    const eventDate = new Date(this.selectedEvent.start);
+    const today = new Date();
+
+    if (eventDate < today) {
+      return 'No se pueden eliminar registros de citas pasadas';
+    }
+
+    return null;
+  }
+
   onDelete() {
-    if (this.selectedEvent && this.selectedEvent.start) {
-      const eventDate = new Date(this.selectedEvent.start);
-      const today = new Date();
-      
-      if (eventDate < today) {
-        this.errorMsg = 'No se pueden eliminar registros de citas pasadas';
-        return;
-      }
+    this.errorMsg = null;
+    
+    const errorDeValidacion = this.validarCancelacion();
+    if (errorDeValidacion) {
+      this.errorMsg = errorDeValidacion;
+      return;
     }
     
     this.delete.emit();
