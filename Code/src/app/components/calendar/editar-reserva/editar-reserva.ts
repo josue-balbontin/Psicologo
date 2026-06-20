@@ -77,41 +77,48 @@ export class EditarReserva implements OnInit {
     };
   }
 
+  private validarFormulario(): string | null {
+    if (!this.form.nombre.trim() || !this.form.descripcion.trim() || !this.form.telefono.trim()) {
+      return 'Nombre, descripción y teléfono son obligatorios.';
+    }
+
+    const phoneDigits = this.form.telefono.replace(/\D/g, '');
+    if (phoneDigits.length < 7) {
+      return 'El teléfono debe tener al menos 7 dígitos.';
+    }
+
+    if (this.form.correo) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(this.form.correo)) {
+        return 'Formato de correo inválido';
+      }
+    }
+
+    const precio = this.parsePrecio(this.form.precio);
+    if (Number.isNaN(precio) || (precio !== null && precio < 0)) {
+      return 'Valor monetario inválido';
+    }
+
+    if (this.form.end <= this.form.start) {
+      return 'La hora de fin debe ser posterior a la de inicio.';
+    }
+
+    return null;
+  }
+
   async guardar(): Promise<void> {
     if (this.isLoading()) return;
 
     this.submitAttempted.set(true);
     this.errorMsg.set(null);
 
-    if (!this.form.nombre.trim() || !this.form.descripcion.trim() || !this.form.telefono.trim()) {
-      this.errorMsg.set('Nombre, descripción y teléfono son obligatorios.');
+    const errorDeValidacion = this.validarFormulario();
+    if (errorDeValidacion) {
+      this.errorMsg.set(errorDeValidacion);
       return;
-    }
-
-    const phoneDigits = this.form.telefono.replace(/\D/g, '');
-    if (phoneDigits.length < 7) {
-      this.errorMsg.set('El teléfono debe tener al menos 7 dígitos.');
-      return;
-    }
-
-    if (this.form.correo) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(this.form.correo)) {
-        this.errorMsg.set('Formato de correo inválido');
-        return;
-      }
     }
 
     const precio = this.parsePrecio(this.form.precio);
-    if (Number.isNaN(precio) || precio! < 0) {
-      this.errorMsg.set('Valor monetario inválido');
-      return;
-    }
-
-    if (this.form.end <= this.form.start) {
-      this.errorMsg.set('La hora de fin debe ser posterior a la de inicio.');
-      return;
-    }
 
     const startDate = new Date(this.form.start);
     const endDate = new Date(this.form.end);
