@@ -94,6 +94,11 @@ export class EditarReserva implements OnInit {
       return;
     }
 
+    if (this.form.correo && !this.form.correo.includes('@')) {
+      this.errorMsg.set('Formato de correo inválido');
+      return;
+    }
+
     const precio = this.parsePrecio(this.form.precio);
     if (Number.isNaN(precio)) {
       this.errorMsg.set('El precio debe ser un número válido.');
