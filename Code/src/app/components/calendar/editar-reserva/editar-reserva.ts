@@ -100,8 +100,8 @@ export class EditarReserva implements OnInit {
     }
 
     const precio = this.parsePrecio(this.form.precio);
-    if (Number.isNaN(precio)) {
-      this.errorMsg.set('El precio debe ser un número válido.');
+    if (Number.isNaN(precio) || precio! < 0) {
+      this.errorMsg.set('Valor monetario inválido');
       return;
     }
 
