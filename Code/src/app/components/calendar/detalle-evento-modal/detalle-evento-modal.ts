@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DayPilot } from '@daypilot/daypilot-lite-angular';
 
 @Component({
   selector: 'app-detalle-evento-modal',
@@ -10,7 +11,7 @@ import { CommonModule } from '@angular/common';
 })
 export class DetalleEventoModal {
   @Input() showModal = false;
-  @Input() selectedEvent: any = null;
+  @Input() selectedEvent: DayPilot.Event | null = null;
 
   @Output() edit = new EventEmitter<void>();
   @Output() delete = new EventEmitter<void>();
@@ -27,7 +28,7 @@ export class DetalleEventoModal {
       return null;
     }
 
-    const eventDate = new Date(this.selectedEvent.start);
+    const eventDate = new Date(this.selectedEvent.start().toString());
     const today = new Date();
 
     if (eventDate < today) {

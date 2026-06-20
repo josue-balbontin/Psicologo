@@ -1,6 +1,5 @@
 import {
   Component,
-  OnInit,
   ViewChild,
   signal,
   inject,
@@ -40,7 +39,7 @@ type CalendarView = 'Day' | 'Week' | 'Month';
   templateUrl: './calendar.component.html',
   styleUrl: './calendar.component.css',
 })
-export class CalendarComponent implements OnInit {
+export class CalendarComponent {
   @ViewChild('dayPilotCalendar') calendar!: DayPilotCalendarComponent;
   @ViewChild('dayPilotMonth') monthCalendar!: DayPilotMonthComponent;
   @ViewChild('navigator') navigator!: DayPilotNavigatorComponent;
@@ -103,7 +102,7 @@ export class CalendarComponent implements OnInit {
       this.showEventDetail.set(true);
     },
     onBeforeEventRender: (args) => {
-      const color = (args.data as any)['color'] || '#3b82f6';
+      const color = (args.data as any)['color'] || this.COLOR;
       args.data.backColor = color;
       args.data.borderColor = color;
       args.data.fontColor = '#ffffff';
@@ -123,7 +122,7 @@ export class CalendarComponent implements OnInit {
       this.showEventDetail.set(true);
     },
     onBeforeEventRender: (args) => {
-      const color = (args.data as any)['color'] || '#3b82f6';
+      const color = (args.data as any)['color'] || this.COLOR;
       args.data.backColor = color;
       args.data.borderColor = color;
       args.data.fontColor = '#ffffff';
@@ -133,8 +132,6 @@ export class CalendarComponent implements OnInit {
   private supabaseService = inject(SupabaseService);
 
   private events: DayPilot.EventData[] = [];
-
-  ngOnInit(): void {}
 
   ngAfterViewInit(): void {
     this.cargarReservas();

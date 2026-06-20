@@ -43,8 +43,8 @@ describe('DetalleEventoModal (Pruebas Unitarias)', () => {
     fechaPasada.setDate(fechaPasada.getDate() - 7);
     
     component.selectedEvent = {
-      start: fechaPasada.toISOString()
-    };
+      start: () => fechaPasada.toISOString()
+    } as any;
     
     component.delete = { emit: vi.fn() } as any;
 
