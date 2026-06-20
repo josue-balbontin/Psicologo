@@ -54,21 +54,29 @@ describe('EditarReserva (Pruebas Unitarias)', () => {
     expect(mockSupabaseService.actualizar).not.toHaveBeenCalled();
   });
 
-  it('HU-09: Muestra error si el formato del precio es inválido ', async () => {
+  it('HU-09: Frena la acción y advierte "Valor monetario inválido" si el precio tiene letras o es negativo', async () => {
+
     component.form.precio = 'abc';
     await component.guardar();
+    expect(component.errorMsg()).toBe('Valor monetario inválido');
+    expect(mockSupabaseService.actualizar).not.toHaveBeenCalled();
 
-    expect(component.errorMsg()).toBe('El precio debe ser un número válido.');
+
+    component.errorMsg.set(null);
+
+  
+    component.form.precio = -50;
+    await component.guardar();
+    expect(component.errorMsg()).toBe('Valor monetario inválido');
     expect(mockSupabaseService.actualizar).not.toHaveBeenCalled();
   });
 
   it('HU-07: Bloquea la actualización si el correo tiene un formato inválido (ej. sin @)', async () => {
    
-    component.form.correo = 'correosinarroba.com';
+    component.form.correo = 'correos.com';
     
     await component.guardar();
 
-   
     expect(component.errorMsg()).toBe('Formato de correo inválido');
     expect(mockSupabaseService.actualizar).not.toHaveBeenCalled();
   });
