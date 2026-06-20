@@ -38,5 +38,19 @@ describe('DetalleEventoModal (Pruebas Unitarias)', () => {
     expect(duracion).toBe('2 h');
   });
 
-  
+  it('HU-08: Bloquea la cancelación de citas pasadas y muestra aviso', () => {
+    const fechaPasada = new Date();
+    fechaPasada.setDate(fechaPasada.getDate() - 7);
+    
+    component.selectedEvent = {
+      start: fechaPasada.toISOString()
+    };
+    
+    component.delete = { emit: vi.fn() } as any;
+
+    component.onDelete();
+
+    expect(component.errorMsg).toBe('No se pueden eliminar registros de citas pasadas');
+    expect(component.delete.emit).not.toHaveBeenCalled();
+  });
 });
