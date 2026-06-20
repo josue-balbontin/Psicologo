@@ -16,11 +16,23 @@ export class DetalleEventoModal {
   @Output() delete = new EventEmitter<void>();
   @Output() close = new EventEmitter<void>();
 
+  errorMsg: string | null = null;
+
   onClose() {
     this.close.emit();
   }
 
   onDelete() {
+    if (this.selectedEvent && this.selectedEvent.start) {
+      const eventDate = new Date(this.selectedEvent.start);
+      const today = new Date();
+      
+      if (eventDate < today) {
+        this.errorMsg = 'No se pueden eliminar registros de citas pasadas';
+        return;
+      }
+    }
+    
     this.delete.emit();
   }
 
