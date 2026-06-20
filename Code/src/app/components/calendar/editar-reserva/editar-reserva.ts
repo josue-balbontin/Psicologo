@@ -94,9 +94,12 @@ export class EditarReserva implements OnInit {
       return;
     }
 
-    if (this.form.correo && !this.form.correo.includes('@')) {
-      this.errorMsg.set('Formato de correo inválido');
-      return;
+    if (this.form.correo) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(this.form.correo)) {
+        this.errorMsg.set('Formato de correo inválido');
+        return;
+      }
     }
 
     const precio = this.parsePrecio(this.form.precio);
